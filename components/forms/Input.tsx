@@ -1,15 +1,12 @@
-// THIS IS AN EXAMPLE FOR BULING ATRIBUTES OF COMPONENTS LIKE "RADIO BUTTONS" "SELECT BOX" "TEXT AEREA" "SLIDER?"
-
 import { ChangeEvent } from "react";
 import Link from "next/link";
-import { link } from "fs";
+
 interface Props {
     labelId: string;
     type: string;
     onChange: (event: ChangeEvent<HTMLInputElement>) => void;
     value: string;
     children: React.ReactNode;
-    // optional prop is defined by ?
     link?: {
         linkText: string;
         linkUrl: string;
@@ -61,6 +58,3 @@ export default function Input({
 
     )
 }
-
-// Exsample:
-// <Input>First name</Input> === children prop!
