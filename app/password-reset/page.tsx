@@ -1,5 +1,6 @@
 import { PasswordResetForm } from '@/components/forms';
 import type { Metadata } from 'next';
+import Image  from 'next/image';
 
 export const metadata: Metadata = {
 	title: 'Full Auth | Password Reset',
