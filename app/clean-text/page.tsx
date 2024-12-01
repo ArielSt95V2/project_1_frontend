@@ -11,7 +11,7 @@ const CleanTextPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/chat/clean-text/`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_HOST}/api/chat/clean-text/`, {
         text: inputText,
       });
       setCleanedText(response.data.cleaned_text);
