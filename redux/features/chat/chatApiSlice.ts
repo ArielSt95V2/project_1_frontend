@@ -1,32 +1,22 @@
 import { openaiApi } from '@/redux/services/chat/openai_service';
+import { 
+  ChatMessage, 
+  ChatThread, 
+  CreateThreadRequest, 
+  UpdateThreadRequest, 
+  SendMessageRequest, 
+  SendMessageResponse 
+} from '@/types/chat';
 
-// Defining the interface for a chat message
-interface ChatMessage {
-  id: number;
-  content: string;
-  timestamp: string;
-  role: 'user' | 'assistant'; // Add role here
-}
-
-// Defining the interface for the chat response
-interface ChatResponse {
-  message: string;
-}
-
-// Defining the arguments for sending a message to the chatbot
-interface SendMessageArgs {
-  message: string;
-}
-
-// Defining the tag type
+// Tag types for cache invalidation
 type ChatMessageTag = { type: 'ChatMessage'; id: number | 'LIST' };
 
 // Injecting endpoints into the openaiApi
 export const chatApiSlice = openaiApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Endpoint to fetch chat history
-    fetchChatHistory: builder.query<ChatMessage[], void>({
-      query: () => '/chat/history/',
+    // Thread endpoints
+    fetchThreads: builder.query<ChatThread[], void>({
+      query: () => '/chat/threads/',
       providesTags: (result): ChatMessageTag[] =>
         result
           ? [
@@ -36,26 +26,75 @@ export const chatApiSlice = openaiApi.injectEndpoints({
           : [{ type: 'ChatMessage', id: 'LIST' }],
     }),
 
-    // Endpoint to send a message to the chatbot and receive a response
-    sendMessage: builder.mutation<ChatResponse, SendMessageArgs>({
-      query: ({ message }) => {
-        console.log('Sending API Request:', { message }); // Log request details
-        return {
-          url: '/chat/message/', // Backend endpoint
-          method: 'POST',
-          body: { message },
-        };
-      },
-      invalidatesTags: [{ type: 'ChatMessage', id: 'LIST' }], // Invalidate cache
-      onQueryStarted: (arg, { queryFulfilled }) => {
-        queryFulfilled.then(
-          ({ data }) => console.log('API Success:', data), // Log success
-          (error) => console.error('API Error:', error) // Log any error
-        );
+    createThread: builder.mutation<ChatThread, CreateThreadRequest>({
+      query: (data) => ({
+        url: '/chat/threads/',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'ChatMessage', id: 'LIST' }],
+    }),
+
+    updateThread: builder.mutation<ChatThread, { id: number; data: UpdateThreadRequest }>({
+      query: ({ id, data }) => ({
+        url: `/chat/threads/${id}/`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'ChatMessage', id: 'LIST' },
+        { type: 'ChatMessage', id },
+      ],
+    }),
+
+    deleteThread: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `/chat/threads/${id}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'ChatMessage', id: 'LIST' },
+        { type: 'ChatMessage', id },
+      ],
+    }),
+
+    // Message endpoints
+    fetchThreadMessages: builder.query<ChatMessage[], number>({
+      query: (threadId) => `/chat/threads/${threadId}/messages/`,
+      providesTags: (result): ChatMessageTag[] =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'ChatMessage', id } as const)),
+              { type: 'ChatMessage', id: 'LIST' },
+            ]
+          : [{ type: 'ChatMessage', id: 'LIST' }],
+    }),
+
+    sendMessage: builder.mutation<SendMessageResponse, SendMessageRequest>({
+      query: (data) => ({
+        url: '/chat/message/',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'ChatMessage', id: 'LIST' }],
+      onQueryStarted: async (arg, { queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          console.log('Message sent successfully:', data);
+        } catch (error) {
+          console.error('Error sending message:', error);
+        }
       },
     }),
   }),
-  overrideExisting: false, // Prevent overwriting existing endpoints
+  overrideExisting: false,
 });
 
-export const { useFetchChatHistoryQuery, useSendMessageMutation } = chatApiSlice;
+export const {
+  useFetchThreadsQuery,
+  useCreateThreadMutation,
+  useUpdateThreadMutation,
+  useDeleteThreadMutation,
+  useFetchThreadMessagesQuery,
+  useSendMessageMutation,
+} = chatApiSlice;
