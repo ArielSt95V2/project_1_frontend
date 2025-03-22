@@ -1,16 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ChatMessage, ChatThread, ChatState } from '@/types/chat';
+import { ChatThread, ChatMessage, Assistant, ChatState } from '@/types/chat';
 
 const initialState: ChatState = {
-  messages: [],
   threads: [],
   currentThread: null,
+  messages: [],
+  selectedAssistant: null,
   loading: false,
   error: null,
 };
 
 const chatSlice = createSlice({
-  name: 'chat',
+  name: 'chatbot',
   initialState,
   reducers: {
     // Thread actions
@@ -57,6 +58,11 @@ const chatSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+
+    // Assistant actions
+    setSelectedAssistant: (state, action: PayloadAction<Assistant | null>) => {
+      state.selectedAssistant = action.payload;
+    },
   },
 });
 
@@ -71,6 +77,7 @@ export const {
   clearMessages,
   setLoading,
   setError,
+  setSelectedAssistant,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

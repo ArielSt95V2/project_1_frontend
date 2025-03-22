@@ -1,100 +1,99 @@
-import { openaiApi } from '@/redux/services/chat/openai_service';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { 
   ChatMessage, 
   ChatThread, 
   CreateThreadRequest, 
   UpdateThreadRequest, 
   SendMessageRequest, 
-  SendMessageResponse 
+  SendMessageResponse,
+  Assistant
 } from '@/types/chat';
 
 // Tag types for cache invalidation
 type ChatMessageTag = { type: 'ChatMessage'; id: number | 'LIST' };
 
-// Injecting endpoints into the openaiApi
-export const chatApiSlice = openaiApi.injectEndpoints({
+export const chatApi = createApi({
+  reducerPath: 'chatApi',
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: process.env.NEXT_PUBLIC_HOST + '/api/chat/',
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json');
+      return headers;
+    }
+  }),
+  tagTypes: ['Thread', 'Message', 'Assistant'],
   endpoints: (builder) => ({
+    // Assistant endpoints
+    fetchAssistants: builder.query<Assistant[], void>({
+      query: () => ({
+        url: 'assistants/',
+        method: 'GET',
+      }),
+      providesTags: ['Assistant'],
+    }),
+
     // Thread endpoints
     fetchThreads: builder.query<ChatThread[], void>({
-      query: () => '/chat/threads/',
-      providesTags: (result): ChatMessageTag[] =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ChatMessage', id } as const)),
-              { type: 'ChatMessage', id: 'LIST' },
-            ]
-          : [{ type: 'ChatMessage', id: 'LIST' }],
+      query: () => ({
+        url: 'threads/',
+        method: 'GET',
+      }),
+      providesTags: ['Thread'],
     }),
 
     createThread: builder.mutation<ChatThread, CreateThreadRequest>({
       query: (data) => ({
-        url: '/chat/threads/',
+        url: 'threads/',
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'ChatMessage', id: 'LIST' }],
+      invalidatesTags: ['Thread'],
     }),
 
     updateThread: builder.mutation<ChatThread, { id: number; data: UpdateThreadRequest }>({
       query: ({ id, data }) => ({
-        url: `/chat/threads/${id}/`,
-        method: 'PUT',
+        url: `threads/${id}/`,
+        method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'ChatMessage', id: 'LIST' },
-        { type: 'ChatMessage', id },
-      ],
+      invalidatesTags: ['Thread'],
     }),
 
     deleteThread: builder.mutation<void, number>({
       query: (id) => ({
-        url: `/chat/threads/${id}/`,
+        url: `threads/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: 'ChatMessage', id: 'LIST' },
-        { type: 'ChatMessage', id },
-      ],
+      invalidatesTags: ['Thread'],
     }),
 
     // Message endpoints
     fetchThreadMessages: builder.query<ChatMessage[], number>({
-      query: (threadId) => `/chat/threads/${threadId}/messages/`,
-      providesTags: (result): ChatMessageTag[] =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ChatMessage', id } as const)),
-              { type: 'ChatMessage', id: 'LIST' },
-            ]
-          : [{ type: 'ChatMessage', id: 'LIST' }],
+      query: (threadId) => ({
+        url: `threads/${threadId}/messages/`,
+        method: 'GET',
+      }),
+      providesTags: ['Message'],
     }),
 
     sendMessage: builder.mutation<SendMessageResponse, SendMessageRequest>({
       query: (data) => ({
-        url: '/chat/message/',
+        url: 'messages/',
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: [{ type: 'ChatMessage', id: 'LIST' }],
-      onQueryStarted: async (arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          console.log('Message sent successfully:', data);
-        } catch (error) {
-          console.error('Error sending message:', error);
-        }
-      },
+      invalidatesTags: ['Message'],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {
+  useFetchAssistantsQuery,
   useFetchThreadsQuery,
   useCreateThreadMutation,
   useUpdateThreadMutation,
   useDeleteThreadMutation,
   useFetchThreadMessagesQuery,
   useSendMessageMutation,
-} = chatApiSlice;
+} = chatApi;

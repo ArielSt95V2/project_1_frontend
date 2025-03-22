@@ -21,7 +21,9 @@ export default function ChatPage() {
     currentThread,
     messages,
     userMessage,
+    assistants,
     loading,
+    isLoadingAssistants,
     error,
     handleInputChange,
     createThread,
@@ -30,8 +32,8 @@ export default function ChatPage() {
     sendMessage,
   } = useChat();
 
-  const handleCreateThread = (title: string) => {
-    createThread({ title });
+  const handleCreateThread = (title: string, assistantId: string) => {
+    createThread({ title, assistantId });
   };
 
   const handleEditThread = (thread: ChatThread) => {
@@ -100,6 +102,8 @@ export default function ChatPage() {
         }}
         onSubmit={selectedThread ? handleUpdateThread : handleCreateThread}
         thread={selectedThread}
+        assistants={assistants}
+        isLoadingAssistants={isLoadingAssistants}
       />
     </div>
   );

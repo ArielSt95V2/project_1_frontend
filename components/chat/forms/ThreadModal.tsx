@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ChatThread } from '@/types/chat';
+import { ChatThread, Assistant } from '@/types/chat';
 
 interface ThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (title: string) => void;
+  onSubmit: (title: string, assistantId: string) => void;
   thread?: ChatThread;
+  assistants: Assistant[];
+  isLoadingAssistants?: boolean;
 }
 
 export default function ThreadModal({
@@ -13,21 +15,26 @@ export default function ThreadModal({
   onClose,
   onSubmit,
   thread,
+  assistants,
+  isLoadingAssistants = false,
 }: ThreadModalProps) {
   const [title, setTitle] = useState('');
+  const [selectedAssistantId, setSelectedAssistantId] = useState('');
 
   useEffect(() => {
     if (thread) {
       setTitle(thread.title);
+      setSelectedAssistantId(thread.openai_assistant_id);
     } else {
       setTitle('');
+      setSelectedAssistantId('');
     }
   }, [thread]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
-      onSubmit(title.trim());
+    if (title.trim() && selectedAssistantId) {
+      onSubmit(title.trim(), selectedAssistantId);
       onClose();
     }
   };
@@ -58,6 +65,39 @@ export default function ThreadModal({
               autoFocus
             />
           </div>
+          {!thread && (
+            <div className="mb-4">
+              <label
+                htmlFor="assistant"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Select AI Assistant
+              </label>
+              <select
+                id="assistant"
+                value={selectedAssistantId}
+                onChange={(e) => setSelectedAssistantId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                disabled={isLoadingAssistants}
+              >
+                <option value="">Choose an assistant...</option>
+                {assistants.map((assistant) => (
+                  <option key={assistant.id} value={assistant.id}>
+                    {assistant.name}
+                  </option>
+                ))}
+              </select>
+              {isLoadingAssistants && (
+                <p className="mt-1 text-sm text-gray-500">Loading assistants...</p>
+              )}
+              {selectedAssistantId && !isLoadingAssistants && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {assistants.find(a => a.id === selectedAssistantId)?.instructions}
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex justify-end space-x-3">
             <button
               type="button"
@@ -68,8 +108,8 @@ export default function ThreadModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              disabled={!title.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!title.trim() || (!thread && !selectedAssistantId) || isLoadingAssistants}
             >
               {thread ? 'Save' : 'Create'}
             </button>

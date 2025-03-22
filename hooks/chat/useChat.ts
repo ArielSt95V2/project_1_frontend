@@ -12,15 +12,26 @@ import {
   useFetchThreadsQuery,
   useFetchThreadMessagesQuery,
   useSendMessageMutation,
+  useFetchAssistantsQuery,
 } from '@/redux/features/chat/chatApiSlice';
-import { setThreads, setCurrentThread, setMessages, addMessage } from '@/redux/features/chat/chatSlice';
-import { ChatThread, ChatMessage } from '@/types/chat';
+import { setThreads, setCurrentThread, setMessages, addMessage, setSelectedAssistant } from '@/redux/features/chat/chatSlice';
+import { ChatThread, ChatMessage, Assistant } from '@/types/chat';
 
 export default function useChat() {
   const dispatch = useAppDispatch();
   const [userMessage, setUserMessage] = useState<string>('');
   const currentThread = useAppSelector((state) => state.chatbot.currentThread);
   const threads = useAppSelector((state) => state.chatbot.threads);
+  const selectedAssistant = useAppSelector((state) => state.chatbot.selectedAssistant);
+
+  // Assistant operations
+  const { data: assistants, isLoading: isLoadingAssistants } = useFetchAssistantsQuery();
+
+  // Add console logging
+  useEffect(() => {
+    console.log('Assistants:', assistants);
+    console.log('Loading Assistants:', isLoadingAssistants);
+  }, [assistants, isLoadingAssistants]);
 
   // Thread operations
   const { data: fetchedThreads, isLoading: isLoadingThreads } = useFetchThreadsQuery();
@@ -49,10 +60,11 @@ export default function useChat() {
     }
   }, [messages, dispatch]);
 
-  const createThread = async ({ title }: { title: string }) => {
+  const createThread = async ({ title, assistantId }: { title: string; assistantId: string }) => {
     try {
-      const thread = await createThreadMutation({ title }).unwrap();
+      const thread = await createThreadMutation({ title, assistant_id: assistantId }).unwrap();
       dispatch(setCurrentThread(thread));
+      dispatch(setSelectedAssistant(assistants?.find(a => a.id === assistantId) || null));
       toast.success('Chat created successfully!');
     } catch (error) {
       console.error('Failed to create thread:', error);
@@ -78,6 +90,7 @@ export default function useChat() {
       await deleteThreadMutation(threadId).unwrap();
       if (currentThread?.id === threadId) {
         dispatch(setCurrentThread(null));
+        dispatch(setSelectedAssistant(null));
       }
       toast.success('Chat deleted successfully!');
     } catch (error) {
@@ -106,6 +119,7 @@ export default function useChat() {
         timestamp,
         role: 'user',
         thread: threadId,
+        openai_message_id: '', // Will be updated after API response
       };
       dispatch(addMessage(userChatMessage));
 
@@ -119,6 +133,7 @@ export default function useChat() {
         timestamp,
         role: 'assistant',
         thread: threadId,
+        openai_message_id: response.run_id,
       };
       dispatch(addMessage(assistantMessage));
 
@@ -139,7 +154,10 @@ export default function useChat() {
     currentThread,
     messages: messages || [],
     userMessage,
+    assistants: assistants || [],
+    selectedAssistant,
     loading: isLoadingThreads || isLoadingMessages || isSending,
+    isLoadingAssistants,
     error: messagesError ? 'Failed to load messages' : null,
     handleInputChange,
     createThread,

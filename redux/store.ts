@@ -7,6 +7,7 @@ import authReducer from './features/authSlice';
 // Importing the openaiAPI slice and authentication reducer
 import { openaiApi } from './services/chat/openai_service';
 import chatReducer from './features/chat/chatSlice';
+import { chatApi } from './features/chat/chatApiSlice';
 
 // Store: The store is a JavaScript object that holds the entire state of your application.
 // It is the single source of truth for your app's state.
@@ -19,17 +20,18 @@ export const store = configureStore({
 		
 		chatbot: chatReducer,
 		[openaiApi.reducerPath]: openaiApi.reducer,
-
-		
+		[chatApi.reducerPath]: chatApi.reducer,
 	},
 	// Middleware: Extending the default middleware to include the API slice middleware
 	middleware: getDefaultMiddleware =>
-		getDefaultMiddleware().concat(apiSlice.middleware, openaiApi.middleware),
+		getDefaultMiddleware().concat(
+			apiSlice.middleware,
+			openaiApi.middleware,
+			chatApi.middleware
+		),
 	// Enabling Redux DevTools only in development mode
 	devTools: process.env.NODE_ENV !== 'production',
 });
-
-
 
 // RootState: TypeScript type representing the entire state of the Redux store
 export type RootState = ReturnType<(typeof store)['getState']>;
