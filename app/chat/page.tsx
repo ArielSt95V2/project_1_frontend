@@ -41,9 +41,15 @@ export default function ChatPage() {
     setIsModalOpen(true);
   };
 
-  const handleUpdateThread = (title: string) => {
+  const handleUpdateThread = (title: string, assistantId: string) => {
     if (selectedThread) {
-      updateThread({ threadId: selectedThread.id, title });
+      updateThread({ 
+        threadId: selectedThread.id, 
+        title,
+        assistantId 
+      });
+      setIsModalOpen(false);
+      setSelectedThread(undefined);
     }
   };
 

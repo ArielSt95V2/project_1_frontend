@@ -72,11 +72,29 @@ export default function useChat() {
     }
   };
 
-  const updateThread = async ({ threadId, title }: { threadId: number; title: string }) => {
+  const updateThread = async ({ 
+    threadId, 
+    title, 
+    assistantId 
+  }: { 
+    threadId: number; 
+    title: string;
+    assistantId?: string;
+  }) => {
     try {
-      const updatedThread = await updateThreadMutation({ id: threadId, data: { title } }).unwrap();
+      const updatedThread = await updateThreadMutation({ 
+        id: threadId, 
+        data: { 
+          title,
+          assistant_id: assistantId 
+        } 
+      }).unwrap();
+      
       if (currentThread?.id === threadId) {
         dispatch(setCurrentThread(updatedThread));
+        if (assistantId) {
+          dispatch(setSelectedAssistant(assistants?.find(a => a.id === assistantId) || null));
+        }
       }
       toast.success('Chat updated successfully!');
     } catch (error) {

@@ -65,39 +65,42 @@ export default function ThreadModal({
               autoFocus
             />
           </div>
-          {!thread && (
-            <div className="mb-4">
-              <label
-                htmlFor="assistant"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Select AI Assistant
-              </label>
-              <select
-                id="assistant"
-                value={selectedAssistantId}
-                onChange={(e) => setSelectedAssistantId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={isLoadingAssistants}
-              >
-                <option value="">Choose an assistant...</option>
-                {assistants.map((assistant) => (
-                  <option key={assistant.id} value={assistant.id}>
-                    {assistant.name}
-                  </option>
-                ))}
-              </select>
-              {isLoadingAssistants && (
-                <p className="mt-1 text-sm text-gray-500">Loading assistants...</p>
-              )}
-              {selectedAssistantId && !isLoadingAssistants && (
-                <p className="mt-1 text-sm text-gray-500">
-                  {assistants.find(a => a.id === selectedAssistantId)?.instructions}
-                </p>
-              )}
-            </div>
-          )}
+          <div className="mb-4">
+            <label
+              htmlFor="assistant"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              {thread ? 'Switch AI Assistant' : 'Select AI Assistant'}
+            </label>
+            <select
+              id="assistant"
+              value={selectedAssistantId}
+              onChange={(e) => setSelectedAssistantId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              disabled={isLoadingAssistants}
+            >
+              <option value="">Choose an assistant...</option>
+              {assistants.map((assistant) => (
+                <option key={assistant.id} value={assistant.id}>
+                  {assistant.name}
+                </option>
+              ))}
+            </select>
+            {isLoadingAssistants && (
+              <p className="mt-1 text-sm text-gray-500">Loading assistants...</p>
+            )}
+            {selectedAssistantId && !isLoadingAssistants && (
+              <p className="mt-1 text-sm text-gray-500">
+                {assistants.find(a => a.id === selectedAssistantId)?.instructions}
+              </p>
+            )}
+            {thread && selectedAssistantId !== thread.openai_assistant_id && (
+              <p className="mt-2 text-sm text-yellow-600">
+                Note: Switching assistants will keep the conversation history but responses may vary based on the new assistant's capabilities.
+              </p>
+            )}
+          </div>
           <div className="flex justify-end space-x-3">
             <button
               type="button"
@@ -109,7 +112,7 @@ export default function ThreadModal({
             <button
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={!title.trim() || (!thread && !selectedAssistantId) || isLoadingAssistants}
+              disabled={!title.trim() || !selectedAssistantId || isLoadingAssistants}
             >
               {thread ? 'Save' : 'Create'}
             </button>

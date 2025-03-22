@@ -33,7 +33,8 @@ export interface CreateThreadRequest {
 }
 
 export interface UpdateThreadRequest {
-  title: string;
+  title?: string;
+  assistant_id?: string;
 }
 
 export interface SendMessageRequest {
