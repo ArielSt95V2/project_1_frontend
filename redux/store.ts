@@ -1,5 +1,6 @@
 // Importing the necessary function from Redux Toolkit to configure the store
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 // Importing the API slice and authentication reducer
 import { apiSlice } from './services/apiSlice';
 import authReducer from './features/authSlice';
@@ -8,6 +9,9 @@ import authReducer from './features/authSlice';
 import { openaiApi } from './services/chat/openai_service';
 import chatReducer from './features/chat/chatSlice';
 import { chatApi } from './features/chat/chatApiSlice';
+
+import langchainReducer from './features/langchain/langchainSlice';
+import { langchainApi } from './features/langchain/langchainApiSlice';
 
 // Store: The store is a JavaScript object that holds the entire state of your application.
 // It is the single source of truth for your app's state.
@@ -21,13 +25,15 @@ export const store = configureStore({
 		chatbot: chatReducer,
 		[openaiApi.reducerPath]: openaiApi.reducer,
 		[chatApi.reducerPath]: chatApi.reducer,
+		langchain: langchainReducer,
 	},
 	// Middleware: Extending the default middleware to include the API slice middleware
 	middleware: getDefaultMiddleware =>
 		getDefaultMiddleware().concat(
 			apiSlice.middleware,
 			openaiApi.middleware,
-			chatApi.middleware
+			chatApi.middleware,
+			langchainApi.middleware
 		),
 	// Enabling Redux DevTools only in development mode
 	devTools: process.env.NODE_ENV !== 'production',

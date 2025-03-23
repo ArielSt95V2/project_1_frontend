@@ -71,5 +71,6 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const apiSlice = createApi({
 	reducerPath: 'api',
 	baseQuery: baseQueryWithReauth,
+	tagTypes: ['Thread', 'Message'], // Adding tag types for langchain
 	endpoints: builder => ({}), // Placeholder for endpoints to be defined elsewhere
 });

@@ -35,6 +35,13 @@ export default function Navbar() {
 			>
 				Dashboard
 			</NavLink>
+			<NavLink
+				isSelected={isSelected('/langchain-chat')}
+				isMobile={isMobile}
+				href='/langchain-chat'
+			>
+				LangChain Chat
+			</NavLink>
 			<NavLink isMobile={isMobile} onClick={handleLogout}>
 				Logout
 			</NavLink>
