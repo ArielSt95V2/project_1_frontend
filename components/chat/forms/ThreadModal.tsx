@@ -97,7 +97,7 @@ export default function ThreadModal({
             )}
             {thread && selectedAssistantId !== thread.openai_assistant_id && (
               <p className="mt-2 text-sm text-yellow-600">
-                Note: Switching assistants will keep the conversation history but responses may vary based on the new assistant's capabilities.
+                Note: Switching assistants will keep the conversation history but responses may vary based on the new assistant&apos;s capabilities.
               </p>
             )}
           </div>
